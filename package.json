@@ -1,25 +1,51 @@
 {
-  "name": "gitlab-management",
-  "version": "0.0.1",
-  "description": "Gitlab Management - Gitlab API wrapper for make your life easier",
-  "main": "lib/GitlabManagement.js",
+  "name": "@sigeo/ol-map-management",
+  "version": "0.1.0",
+  "description": "Map Management - OL Map wrapper for make your life easier",
+  "main": "lib/Map.js",
   "scripts": {
-    "build": "./node_modules/.bin/tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./node_modules/.bin/babel src -d lib",
+    "prettier": "prettier --single-quote --jsx-single-quote --write '**/*.js*'"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sigeosrl/gitlab-management.git"
+    "url": "git+https://github.com/sigeodev/ol-map-management.git"
   },
   "author": "Sigeo SRL",
-  "license": "ISC",
+  "license": "GPL3",
   "bugs": {
-    "url": "https://github.com/sigeosrl/gitlab-management/issues"
+    "url": "https://github.com/sigeodev/ol-map-management/issues"
   },
-  "homepage": "https://github.com/sigeosrl/gitlab-management#readme",
+  "homepage": "https://github.com/sigeodev/ol-map-management#readme",
   "dependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
+    "@material-ui/icons": "^4.2.1",
     "axios": "^0.19.0",
-    "query-string": "^6.5.0",
+    "husky": "^3.0.4",
+    "lint-staged": "^9.2.5",
+    "ol": "^5.3.3",
+    "prettier": "^1.18.2",
+    "query-string": "^6.7.0",
     "typescript": "^3.5.1"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "npm run prettier",
+      "git add"
+    ]
   }
 }
