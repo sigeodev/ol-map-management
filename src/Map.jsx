@@ -427,9 +427,11 @@ class Map {
   /**
    * Reset selected features
    */
-  resetSelectedFeatures = () => {
-    this.selectInteraction.getFeatures().clear();
-  };
+  resetSelectedFeatures = () =>
+    new Promise(resolve => {
+      this.selectInteraction.getFeatures().clear();
+      resolve();
+    });
 
   getLayers = () => this.map.getLayers().getArray();
   getLayerToInteraction = () => this.layerToInteraction;
