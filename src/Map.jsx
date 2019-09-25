@@ -397,9 +397,14 @@ class Map {
             return;
           }
 
-          axios.get(url).then(res => {
+          fetch(url).then(res => {
             const data = res;
-            return resolve(data);
+
+            if (data) {
+              return data.json().then(dataJson => resolve(dataJson));
+            }
+
+            return reject();
           });
           break;
         }
