@@ -123,8 +123,9 @@ class Map {
    * Parse WKT feature
    *
    * @param f
+   * @param customOptions
    */
-  parseFeature(f) {
+  parseFeature(f, customOptions) {
     if (!f) {
       return;
     }
@@ -135,9 +136,10 @@ class Map {
 
     feature.setId(f.id);
     feature.setGeometry(geom);
-    // feature.set('typeId', f.siteType.id);
-    // feature.set('type', f.siteType);
-    // feature.set('rotation', f.rotation || 0);
+
+    if (customOptions) {
+      Object.keys(customOptions).forEach(key => feature.set(key, customOptions[key]));
+    }
 
     return feature;
   }
@@ -167,7 +169,7 @@ class Map {
    * @param layer
    * @param feature
    */
-  addFeature = (layer, feature) => {
+  addFeature = (layer, feature, customOptions) => {
     return new Promise((resolve, reject) => {
       if (!layer || !feature) {
         reject();
@@ -179,7 +181,7 @@ class Map {
         reject();
       }
 
-      const parsedFeature = this.parseFeature(feature);
+      const parsedFeature = this.parseFeature(feature, customOptions);
       source.addFeature(parsedFeature);
 
       return resolve(source);
