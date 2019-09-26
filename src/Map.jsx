@@ -10,6 +10,7 @@ import VectorSource from 'ol/source/Vector';
 import TileLayer from 'ol/layer/Tile';
 import TileWMS from 'ol/source/TileWMS';
 import BingMaps from 'ol/source/BingMaps';
+import Group from 'ol/layer/Group';
 import OSM from 'ol/source/OSM';
 
 import TerrainIcon from '@material-ui/icons/Terrain';
@@ -503,12 +504,18 @@ class Map {
         reject();
       }
 
-      /**
-       * Remove all layers
-       */
+      this.map.setLayerGroup(new Group());
+
+      /*
+      console.log('prima' + this.getLayers())
+
       layers.forEach(layer => {
+        console.log('rimosso seguente layer: ' + layer)
         this.removeLayer(layer);
       });
+
+      console.log('dopo rimozione' + this.getLayers())
+      */
 
       /**
        * Add default layers
@@ -518,8 +525,6 @@ class Map {
         this.addLayer(layer);
       });
 
-      // Show the first base layer!
-      this.changeLayerVisibility(newBaseLayers[0]);
       resolve();
     });
 
