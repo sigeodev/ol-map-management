@@ -440,7 +440,14 @@ class Map {
       resolve();
     });
 
-  getLayers = () => this.map.getLayers().getArray();
+  getLayers = () => {
+    if (!this.map) {
+      return [];
+    }
+
+    return this.map.getLayers().getArray();
+  };
+
   getLayerToInteraction = () => this.layerToInteraction;
 
   setLayerToInteraction = value => {
