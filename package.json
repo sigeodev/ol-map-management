@@ -1,6 +1,6 @@
 {
   "name": "@sigeo/ol-map-management",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Map Management - OL Map wrapper for make your life easier",
   "main": "lib/Map.js",
   "scripts": {

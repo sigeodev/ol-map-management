@@ -114,6 +114,13 @@ class Map {
     this.map.addInteraction(this.selectInteraction);
   };
 
+  removeInteraction = () => {
+    return new Promise(resolve => {
+      this.map.removeInteraction(this.selectInteraction);
+      resolve();
+    });
+  };
+
   on = (evt, callback) => this.map.on(evt, callback);
   onInteraction = (evt, callback) => this.selectInteraction.on(evt, callback);
   removeLayer = layer => this.map.removeLayer(layer);
@@ -168,6 +175,8 @@ class Map {
    *
    * @param layer
    * @param feature
+   * @param customOptions
+   * @returns {Promise<unknown>}
    */
   addFeature = (layer, feature, customOptions) => {
     return new Promise((resolve, reject) => {
@@ -472,34 +481,36 @@ class Map {
    * @param isVisible
    */
   changeLayerVisibility = (layer, isVisible) => {
-    const layers = this.getLayers();
+    return new Promise((resolve, reject) => {
+      const layers = this.getLayers();
 
-    if (!layer) {
-      return;
-    }
+      if (!layer) {
+        return reject();
+      }
 
-    if (layer.values_.mutuallyExclusive) {
-      // Logic only on mutually exclusive layers
-      const mutuallyExclusiveLayers = layers.filter(layer => layer.values_.mutuallyExclusive);
-      mutuallyExclusiveLayers.forEach(l => {
-        l.setVisible(l.ol_uid === layer.ol_uid);
-      });
-    } else {
-      layer.setVisible(isVisible);
+      if (layer.values_.mutuallyExclusive) {
+        // Logic only on mutually exclusive layers
+        const mutuallyExclusiveLayers = layers.filter(layer => layer.values_.mutuallyExclusive);
+        mutuallyExclusiveLayers.forEach(l => {
+          l.setVisible(l.ol_uid === layer.ol_uid);
+        });
 
-      /**
-       * If you set the layer to invisible and this layer is the current layer
-       * to interaction, reset it!
-       */
+        resolve();
+      } else {
+        layer.setVisible(isVisible);
 
-      /**
-       * if (!isVisible && layerToInteraction && layerToInteraction.ol_uid === layer.ol_uid) {
-				return this.resetLayerToInteraction();
-			}
-       */
-    }
+        /**
+         * If you set the layer to invisible and this layer is the current layer
+         * to interaction, reset it!
+         */
 
-    // this.forceUpdate();
+        if (!isVisible && this.layerToInteraction && this.layerToInteraction.ol_uid === layer.ol_uid) {
+          this.removeInteraction();
+        }
+
+        resolve();
+      }
+    });
   };
 
   /**
@@ -538,11 +549,14 @@ class Map {
     });
 
   changeOpacity = (layer, value) => {
-    if (!layer) {
-      return;
-    }
+    return new Promise((resolve, reject) => {
+      if (!layer) {
+        reject();
+      }
 
-    layer.setOpacity(value);
+      layer.setOpacity(value);
+      resolve();
+    });
   };
 }
 
