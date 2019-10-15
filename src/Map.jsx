@@ -47,7 +47,7 @@ class Map {
   map = null;
   bingKey = null;
   duration = 2000;
-  selectInteraction = null;
+  interaction = null;
   layerToInteraction = null;
 
   create(params) {
@@ -109,20 +109,23 @@ class Map {
     return baseLayers;
   };
 
-  addInteraction = () => {
-    this.selectInteraction = new Select();
-    this.map.addInteraction(this.selectInteraction);
+  addInteraction = interaction => {
+    return new Promise(resolve => {
+      this.interaction = interaction;
+      this.map.addInteraction(this.interaction);
+      resolve();
+    });
   };
 
   removeInteraction = () => {
     return new Promise(resolve => {
-      this.map.removeInteraction(this.selectInteraction);
+      this.map.removeInteraction(this.interaction);
       resolve();
     });
   };
 
   on = (evt, callback) => this.map.on(evt, callback);
-  onInteraction = (evt, callback) => this.selectInteraction.on(evt, callback);
+  onInteraction = (evt, callback) => this.interaction.on(evt, callback);
   removeLayer = layer => this.map.removeLayer(layer);
   addLayer = layer => this.map.addLayer(layer);
 
@@ -434,7 +437,7 @@ class Map {
       return;
     }
 
-    const features = this.selectInteraction.getFeatures();
+    const features = this.interaction.getFeatures();
     // const length = features.getLength();
 
     features.push(feature);
@@ -445,7 +448,7 @@ class Map {
    */
   resetSelectedFeatures = () =>
     new Promise(resolve => {
-      this.selectInteraction.getFeatures().clear();
+      this.interaction.getFeatures().clear();
       resolve();
     });
 
