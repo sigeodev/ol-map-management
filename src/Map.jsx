@@ -119,15 +119,40 @@ class Map {
 
   removeInteraction = () => {
     return new Promise(resolve => {
+      if (!this.interaction) {
+        resolve();
+      }
+
       this.map.removeInteraction(this.interaction);
       resolve();
     });
   };
 
   on = (evt, callback) => this.map.on(evt, callback);
-  onInteraction = (evt, callback) => this.interaction.on(evt, callback);
-  removeLayer = layer => this.map.removeLayer(layer);
-  addLayer = layer => this.map.addLayer(layer);
+  onInteraction = (evt, callback) => {
+    if (!this.interaction) {
+      return;
+    }
+
+    this.interaction.on(evt, callback);
+  };
+  removeLayer = layer => {
+    return new Promise((resolve, reject) => {
+      if (!this.map) {
+        resolve();
+      }
+
+      this.map.removeLayer(layer);
+      resolve();
+    });
+  };
+  addLayer = layer => {
+    if (!this.map) {
+      return;
+    }
+
+    this.map.addLayer(layer);
+  };
 
   /**
    * Parse WKT feature
@@ -271,7 +296,7 @@ class Map {
     });
   }
 
-  createLayer = (type, isVisible, sourceOptions, customOptions, style) => {
+  createLayer = (type, sourceOptions, customOptions, style) => {
     if (!type) {
       return false;
     }
@@ -294,9 +319,6 @@ class Map {
       Object.keys(customOptions).forEach(key => {
         newLayer.set(key, customOptions[key]);
       });
-
-    newLayer.setVisible(isVisible);
-    this.addLayer(newLayer);
 
     return newLayer;
   };
@@ -448,6 +470,10 @@ class Map {
    */
   resetSelectedFeatures = () =>
     new Promise(resolve => {
+      if (!this.interaction || !this.interaction.getFeatures) {
+        resolve();
+      }
+
       this.interaction.getFeatures().clear();
       resolve();
     });
@@ -461,6 +487,10 @@ class Map {
   };
 
   getLayerToInteraction = () => this.layerToInteraction;
+
+  removeLayerToInteraction = () => {
+    this.layerToInteraction = null;
+  };
 
   setLayerToInteraction = value => {
     if (!value) {
@@ -528,17 +558,6 @@ class Map {
       }
 
       this.map.setLayerGroup(new Group());
-
-      /*
-      console.log('prima' + this.getLayers())
-
-      layers.forEach(layer => {
-        console.log('rimosso seguente layer: ' + layer)
-        this.removeLayer(layer);
-      });
-
-      console.log('dopo rimozione' + this.getLayers())
-      */
 
       /**
        * Add default layers
