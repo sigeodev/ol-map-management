@@ -93,7 +93,8 @@ class Map {
           preload: Infinity,
           source: new BingMaps({
             key: this.bingKey,
-            imagerySet: baseLayer.value
+            imagerySet: baseLayer.value,
+            crossOrigin: 'Anonymous'
           })
         })
       ];
@@ -108,6 +109,8 @@ class Map {
     baseLayers[0].setVisible(true);
     return baseLayers;
   };
+
+  getInteraction = () => this.interaction;
 
   addInteraction = interaction => {
     return new Promise(resolve => {
@@ -263,7 +266,7 @@ class Map {
     }
 
     return new VectorLayer({
-      source: new VectorSource(options),
+      source: new VectorSource({ ...options, crossOrigin: 'Anonymous' }),
       style,
       updateWhileAnimating: true,
       updateWhileInteracting: true
@@ -275,7 +278,7 @@ class Map {
    * @param sourceOptions
    */
   createWMSLayer(sourceOptions) {
-    return new TileLayer({ source: new TileWMS(sourceOptions) });
+    return new TileLayer({ source: new TileWMS({ ...sourceOptions, crossOrigin: 'Anonymous' }) });
   }
 
   /**
@@ -290,7 +293,7 @@ class Map {
     }
 
     return new TileLayer({
-      source: new OSM(options),
+      source: new OSM({ ...options, crossOrigin: 'Anonymous' }),
       updateWhileAnimating: true,
       updateWhileInteracting: true
     });
