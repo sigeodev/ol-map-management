@@ -1,7 +1,6 @@
 import React from 'react';
 
 import OlMap from 'ol/Map';
-import Select from 'ol/interaction/Select';
 import WKT from 'ol/format/WKT';
 import Feature from 'ol/Feature';
 import Collection from 'ol/Collection';
@@ -585,4 +584,4 @@ class Map {
   };
 }
 
-export default new Map();
+export default Map;
