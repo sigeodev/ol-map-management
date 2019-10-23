@@ -227,6 +227,23 @@ class Map {
     });
   };
 
+  removeFeatures = layer => {
+    return new Promise((resolve, reject) => {
+      if (!layer) {
+        reject();
+      }
+
+      const source = layer.getSource();
+
+      if (!source) {
+        reject();
+      }
+
+      source.clear();
+      return resolve(source);
+    });
+  };
+
   /**
    * Add features in a layer
    *
