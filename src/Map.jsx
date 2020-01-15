@@ -419,6 +419,57 @@ class Map {
     view.fit(bboxOrGeometry, { size, duration, ...options });
   };
 
+  openOnGoogleMaps = () => {
+    /**
+     * Map view
+     * @constant
+     */
+    const view = this.getView();
+
+    /**
+     * Transform map in 4326
+     * @constant
+     */
+    const mapCenter = transform(
+      view.getCenter(),
+      view.getProjection(),
+      'EPSG:4326'
+    );
+
+    /**
+     * Get zoom
+     * @constant
+     */
+    const zoom = view.getZoom();
+    
+    /**
+     * Get lat
+     * @constant
+     */
+    const lat = mapCenter[0];
+
+    /**
+     * Get lon
+     * @constant
+     */
+    const lon = mapCenter[1];
+
+    /**
+     * Open a google map window
+     * @constant
+     */
+    const gMapsWin = window.open(
+      `https://www.google.it/maps/@?api=1&map_action=map&center=${lon},${lat}&zoom=${zoom}`,
+      'gmaps',
+      'width=1024,height=768'
+    );
+
+    /**
+     * Focus on it!
+     */
+    gMapsWin?.focus();
+  };
+
   /**
    *
    * @param coordinate

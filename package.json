@@ -1,6 +1,6 @@
 {
   "name": "@sigeo/ol-map-management",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Map Management - OL Map wrapper for make your life easier",
   "main": "lib/Map.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "ol": "^5.3.3",
     "prettier": "^1.18.2",
     "query-string": "^6.7.0",
-    "typescript": "^3.5.1"
+    "typescript": "^3.7.4"
   },
   "peerDependencies": {
     "react": "^16.8.0",
@@ -44,7 +44,9 @@
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
       "npm run prettier",
-      "git add"
+      "/bin/rm -rf lib/*",
+      "npm run build",
+      "git add ."
     ]
   }
 }
