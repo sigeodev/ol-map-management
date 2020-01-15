@@ -5,7 +5,7 @@
   "main": "lib/Map.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./node_modules/.bin/babel src -d lib",
+    "build": "/bin/rm -rf lib/*; ./node_modules/.bin/babel src -d lib",
     "prettier": "prettier --single-quote --jsx-single-quote --write '**/*.js*'"
   },
   "repository": {
@@ -44,7 +44,6 @@
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
       "npm run prettier",
-      "/bin/rm -rf lib/*",
       "npm run build",
       "git add ."
     ]
