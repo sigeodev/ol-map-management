@@ -12,7 +12,7 @@ import TileWMS from 'ol/source/TileWMS';
 import BingMaps from 'ol/source/BingMaps';
 import Group from 'ol/layer/Group';
 import OSM from 'ol/source/OSM';
-
+import { transform } from 'ol/proj';
 import TerrainIcon from '@material-ui/icons/Terrain';
 import FlightIcon from '@material-ui/icons/Flight';
 import DarkIcon from '@material-ui/icons/Brightness4';
