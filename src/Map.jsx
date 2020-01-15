@@ -1,4 +1,5 @@
 import React from 'react';
+import { toPng } from 'html-to-image';
 
 import OlMap from 'ol/Map';
 import WKT from 'ol/format/WKT';
@@ -430,18 +431,14 @@ class Map {
      * Transform map in 4326
      * @constant
      */
-    const mapCenter = transform(
-      view.getCenter(),
-      view.getProjection(),
-      'EPSG:4326'
-    );
+    const mapCenter = transform(view.getCenter(), view.getProjection(), 'EPSG:4326');
 
     /**
      * Get zoom
      * @constant
      */
     const zoom = view.getZoom();
-    
+
     /**
      * Get lat
      * @constant
@@ -458,16 +455,26 @@ class Map {
      * Open a google map window
      * @constant
      */
-    const gMapsWin = window.open(
-      `https://www.google.it/maps/@?api=1&map_action=map&center=${lon},${lat}&zoom=${zoom}`,
-      'gmaps',
-      'width=1024,height=768'
-    );
+    const gMapsWin = window.open(`https://www.google.it/maps/@?api=1&map_action=map&center=${lon},${lat}&zoom=${zoom}`, 'gmaps', 'width=1024,height=768');
 
     /**
      * Focus on it!
      */
     gMapsWin?.focus();
+  };
+
+  /**
+   * Capture image map
+   */
+  capture = () => {
+    toPng(this.map.getTargetElement(), {
+      filter: element => (element.className ? element.className.indexOf('ol-control') === -1 : true)
+    }).then(dataURL => {
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = `map.png`;
+      a.click();
+    });
   };
 
   /**
