@@ -177,7 +177,9 @@ class Map {
     feature.setGeometry(geom);
 
     if (customOptions) {
-      Object.keys(customOptions).forEach(key => feature.set(key, customOptions[key]));
+      Object.keys(customOptions).forEach(key => {
+        feature.set(key, customOptions[key]);
+      });
     }
 
     console.log(f, geom, feature);
