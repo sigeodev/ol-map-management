@@ -13,6 +13,7 @@ import BingMaps from 'ol/source/BingMaps';
 import Group from 'ol/layer/Group';
 import OSM from 'ol/source/OSM';
 import { transform } from 'ol/proj';
+import GeoJSON from 'ol/format/GeoJSON';
 import TerrainIcon from '@material-ui/icons/Terrain';
 import FlightIcon from '@material-ui/icons/Flight';
 import DarkIcon from '@material-ui/icons/Brightness4';
@@ -158,6 +159,33 @@ class Map {
   };
 
   /**
+   * Parse GeoJSON feature
+   *
+   * @param f
+   * @param customOptions
+   */
+  parseGeoJSONFeature(f, customOptions) {
+    if (!f) {
+      return;
+    }
+
+    const format = new GeoJSON();
+    const feature = new Feature();
+    const geom = format.readGeometry(f.geom || f.geometry);
+
+    feature.setId(f.id);
+    feature.setGeometry(geom);
+
+    if (customOptions) {
+      Object.keys(customOptions).forEach(key => feature.set(key, customOptions[key]));
+    }
+
+    console.log(f, geom, feature);
+
+    return feature;
+  }
+
+  /**
    * Parse WKT feature
    *
    * @param f
@@ -199,6 +227,33 @@ class Map {
     });
 
     return features;
+  };
+
+  /**
+   * Add GeoJson feature in a layer
+   *
+   * @param layer
+   * @param feature
+   * @param customOptions
+   * @returns {Promise<unknown>}
+   */
+  addGeoJSONFeature = (layer, feature, customOptions) => {
+    return new Promise((resolve, reject) => {
+      if (!layer || !feature) {
+        reject();
+      }
+
+      const source = layer.getSource();
+
+      if (!source) {
+        reject();
+      }
+
+      const parsedFeature = this.parseGeoJSONFeature(feature, customOptions);
+      source.addFeature(parsedFeature);
+
+      return resolve(source);
+    });
   };
 
   /**
