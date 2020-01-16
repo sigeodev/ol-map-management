@@ -176,13 +176,15 @@ class Map {
     feature.setId(f.id);
     feature.setGeometry(geom);
 
+    console.log(f, geom, feature);
+
+    /*
     if (customOptions) {
       Object.keys(customOptions).forEach(key => {
         feature.set(key, customOptions[key]);
       });
     }
-
-    console.log(f, geom, feature);
+    */
 
     return feature;
   }
