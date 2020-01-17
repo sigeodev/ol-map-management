@@ -1,5 +1,6 @@
 import React from 'react';
 import { toPng } from 'html-to-image';
+import isEmpty from 'lodash/isEmpty';
 
 import OlMap from 'ol/Map';
 import WKT from 'ol/format/WKT';
