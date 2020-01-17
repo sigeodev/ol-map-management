@@ -176,8 +176,6 @@ class Map {
     feature.setId(f.id);
     feature.setGeometry(geom);
 
-    console.log(f, geom, feature);
-
     /*
     if (customOptions) {
       Object.keys(customOptions).forEach(key => {
@@ -374,6 +372,49 @@ class Map {
       updateWhileInteracting: true
     });
   }
+
+  createLayers = (layers, id_parent) => {
+    if (isEmpty(layers)) {
+      return;
+    }
+
+    layers.forEach(layer => {
+      const type = layer.type || LAYER_TYPE.VECTOR;
+      const upperType = type.toUpperCase();
+
+      let options = {};
+
+      switch (type.toLowerCase()) {
+        case LAYER_TYPE.WMS: {
+          let params = { LAYERS: layer.name, TILED: true };
+
+          if (layer.cqlFilter) {
+            const cqlFilterReplaced = layer.cqlFilter.replace('%1%', layer.cqlValue);
+            params = { ...params, cql_filter: cqlFilterReplaced };
+          }
+
+          options = { ...options, url: layer.url, params };
+          break;
+        }
+        default:
+          break;
+      }
+
+      const layertoGenerate = this.createLayer(upperType, options, {
+        ...layer,
+        type: type.toLowerCase(),
+        isRoot: !id_parent,
+        idParent: id_parent
+      });
+
+      layertoGenerate.setVisible(layer.visible);
+      this.addLayer(layertoGenerate);
+
+      if (layer.group) {
+        this.createLayers(layer.layers, layertoGenerate.ol_uid);
+      }
+    });
+  };
 
   createLayer = (type, sourceOptions, customOptions, style) => {
     if (!type) {
