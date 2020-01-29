@@ -442,6 +442,34 @@ class Map {
     return newLayer;
   };
 
+  createAsyncLayer = (type, sourceOptions, customOptions, style) =>
+    new Promise((resolve, reject) => {
+      if (!type) {
+        return reject();
+      }
+
+      let newLayer;
+
+      switch (type.toLowerCase()) {
+        case LAYER_TYPE.WMS:
+          newLayer = this.createWMSLayer(sourceOptions);
+          break;
+        case LAYER_TYPE.VECTOR:
+          newLayer = this.createVectorLayer(sourceOptions, style);
+          break;
+        default:
+          newLayer = this.createTileLayer(sourceOptions);
+          break;
+      }
+
+      customOptions &&
+        Object.keys(customOptions).forEach(key => {
+          newLayer.set(key, customOptions[key]);
+        });
+
+      return resolve(newLayer);
+    });
+
   /**
    * Increment zoom + 1
    */
