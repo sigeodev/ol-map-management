@@ -28,19 +28,19 @@ const BASE_LAYERS = [
   {
     value: 'RoadOnDemand',
     icon: <TerrainIcon />,
-    label: 'Strada', // TODO: i18n
+    label: 'Strada',
     mutuallyExclusive: true
   },
   {
     value: 'CanvasDark',
     icon: <DarkIcon />,
-    label: 'Dark', // TODO: i18n
+    label: 'Dark',
     mutuallyExclusive: true
   },
   {
     value: 'AerialWithLabelsOnDemand',
     icon: <FlightIcon />,
-    label: 'Aereo', // TODO: i18n
+    label: 'Aereo',
     mutuallyExclusive: true
   }
 ];
@@ -51,6 +51,7 @@ class Map {
   duration = 2000;
   interaction = null;
   layerToInteraction = null;
+  onReset = null;
 
   create(params) {
     if (!params) {
@@ -80,6 +81,14 @@ class Map {
   };
 
   getBingKey = () => this.bingKey;
+
+  setResetHandler = handler => {
+    if (!handler) {
+      return;
+    }
+
+    this.onReset = handler;
+  };
 
   getDefaultBaseLayers = () => {
     let baseLayers = [];
@@ -199,7 +208,7 @@ class Map {
 
     const format = new WKT();
     const feature = new Feature();
-    const geom = format.readGeometryFromText(f.geom);
+    const geom = format.readGeometryFromText(f.geom || f.geometry);
 
     feature.setId(f.id);
     feature.setGeometry(geom);
@@ -770,6 +779,10 @@ class Map {
       newBaseLayers.forEach(layer => {
         this.addLayer(layer);
       });
+
+      if (this.onReset) {
+        this.onReset();
+      }
 
       resolve();
     });
