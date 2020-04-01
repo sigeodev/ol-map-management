@@ -699,6 +699,14 @@ class Map {
     return this.map.getLayers().getArray();
   };
 
+  getInteractions = () => {
+    if (!this.map) {
+      return [];
+    }
+
+    return this.map.getInteractions().getArray();
+  };
+
   getLayerToInteraction = () => this.layerToInteraction;
 
   removeLayerToInteraction = () => {
@@ -784,6 +792,21 @@ class Map {
         this.onReset();
       }
 
+      resolve();
+    });
+
+  /**
+   * Reset interactions
+   */
+  resetInteractions = () =>
+    new Promise((resolve, reject) => {
+      const interactions = this.getInteractions();
+
+      if (!interactions) {
+        reject();
+      }
+
+      interactions.forEach(i => this.map.removeInteraction(i));
       resolve();
     });
 
