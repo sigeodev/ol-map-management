@@ -49,8 +49,7 @@ class Map {
   map = null;
   bingKey = null;
   duration = 2000;
-  interaction = null;
-  layerToInteraction = null;
+  customInteractions = [];
   onReset = null;
 
   create(params) {
@@ -121,35 +120,28 @@ class Map {
     return baseLayers;
   };
 
-  getInteraction = () => this.interaction;
-
   addInteraction = interaction => {
     return new Promise(resolve => {
-      this.interaction = interaction;
-      this.map.addInteraction(this.interaction);
+      this.customInteractions = [...this.customInteractions, interaction];
+      this.map.addInteraction(interaction);
       resolve();
     });
   };
 
-  removeInteraction = () => {
-    return new Promise(resolve => {
-      if (!this.interaction) {
-        resolve();
+  removeInteraction = interaction => {
+    return new Promise((resolve, reject) => {
+      if (!interaction) {
+        reject();
       }
 
-      this.map.removeInteraction(this.interaction);
+      this.customInteractions = this.customInteractions.filter(i => i.ol_uid !== interaction.ol_uid);
+      this.map.removeInteraction(interaction);
       resolve();
     });
   };
 
   on = (evt, callback) => this.map.on(evt, callback);
-  onInteraction = (evt, callback) => {
-    if (!this.interaction) {
-      return;
-    }
 
-    this.interaction.on(evt, callback);
-  };
   removeLayer = layer => {
     return new Promise((resolve, reject) => {
       if (!this.map) {
@@ -614,9 +606,6 @@ class Map {
   };
 
   /**
-   *
-   * @param coordinate
-   */
   getFeatureInfo = coordinate => {
     return new Promise((resolve, reject) => {
       if (!coordinate) {
@@ -662,34 +651,7 @@ class Map {
       }
     });
   };
-
-  /**
-   *
-   * @param feature
-   */
-  addSelectedFeature(feature) {
-    if (!feature) {
-      return;
-    }
-
-    const features = this.interaction.getFeatures();
-    // const length = features.getLength();
-
-    features.push(feature);
-  }
-
-  /**
-   * Reset selected features
-   */
-  resetSelectedFeatures = () =>
-    new Promise(resolve => {
-      if (!this.interaction || !this.interaction.getFeatures) {
-        resolve();
-      }
-
-      this.interaction.getFeatures().clear();
-      resolve();
-    });
+ */
 
   getLayers = () => {
     if (!this.map) {
@@ -705,27 +667,6 @@ class Map {
     }
 
     return this.map.getInteractions().getArray();
-  };
-
-  getLayerToInteraction = () => this.layerToInteraction;
-
-  removeLayerToInteraction = () => {
-    this.layerToInteraction = null;
-  };
-
-  setLayerToInteraction = value => {
-    if (!value) {
-      return;
-    }
-
-    const layers = this.getLayers();
-    const layer = layers.find(layer => layer.ol_uid === value);
-
-    if (!layer) {
-      return;
-    }
-
-    this.layerToInteraction = layer;
   };
 
   /**
@@ -752,16 +693,6 @@ class Map {
         resolve();
       } else {
         layer.setVisible(isVisible);
-
-        /**
-         * If you set the layer to invisible and this layer is the current layer
-         * to interaction, reset it!
-         */
-
-        if (!isVisible && this.layerToInteraction && this.layerToInteraction.ol_uid === layer.ol_uid) {
-          this.removeInteraction();
-        }
-
         resolve();
       }
     });
@@ -807,6 +738,17 @@ class Map {
       }
 
       interactions.forEach(i => this.map.removeInteraction(i));
+      this.customInteractions = [];
+      resolve();
+    });
+
+  /**
+   * Reset custom interactions
+   */
+  resetCustomInteractions = () =>
+    new Promise(resolve => {
+      this.customInteractions.forEach(i => this.map.removeInteraction(i));
+      this.customInteractions = [];
       resolve();
     });
 
