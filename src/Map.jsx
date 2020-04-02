@@ -50,6 +50,7 @@ class Map {
   bingKey = null;
   duration = 2000;
   customInteractions = [];
+  customLayers = [];
   onReset = null;
 
   create(params) {
@@ -148,7 +149,9 @@ class Map {
         resolve();
       }
 
+      this.customLayers = this.customLayers.filter(l => l.ol_uid !== layer.ol_uid);
       this.map.removeLayer(layer);
+
       resolve();
     });
   };
@@ -440,6 +443,8 @@ class Map {
         newLayer.set(key, customOptions[key]);
       });
 
+    this.customLayers = [...this.customLayers, newLayer];
+
     return newLayer;
   };
 
@@ -710,6 +715,7 @@ class Map {
       }
 
       this.map.setLayerGroup(new Group());
+      this.customLayers = [];
 
       /**
        * Add default layers
@@ -726,6 +732,12 @@ class Map {
       resolve();
     });
 
+  resetCustomLayers = () =>
+    new Promise(resolve => {
+      this.customLayers.forEach(l => this.removeLayer(l));
+      resolve();
+    });
+
   /**
    * Reset interactions
    */
@@ -737,8 +749,7 @@ class Map {
         reject();
       }
 
-      interactions.forEach(i => this.map.removeInteraction(i));
-      this.customInteractions = [];
+      interactions.forEach(i => this.removeInteraction(i));
       resolve();
     });
 
@@ -747,8 +758,7 @@ class Map {
    */
   resetCustomInteractions = () =>
     new Promise(resolve => {
-      this.customInteractions.forEach(i => this.map.removeInteraction(i));
-      this.customInteractions = [];
+      this.customInteractions.forEach(i => this.removeInteraction(i));
       resolve();
     });
 
