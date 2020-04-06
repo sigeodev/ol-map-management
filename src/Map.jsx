@@ -688,9 +688,9 @@ class Map {
         return reject();
       }
 
-      if (layer.values_.mutuallyExclusive) {
+      if (layer.get('mutuallyExclusive')) {
         // Logic only on mutually exclusive layers
-        const mutuallyExclusiveLayers = layers.filter(layer => layer.values_.mutuallyExclusive);
+        const mutuallyExclusiveLayers = layers.filter(layer => layer.get('mutuallyExclusive'));
         mutuallyExclusiveLayers.forEach(l => {
           l.setVisible(l.ol_uid === layer.ol_uid);
         });
@@ -735,6 +735,8 @@ class Map {
   resetCustomLayers = () =>
     new Promise(resolve => {
       this.customLayers.forEach(l => this.removeLayer(l));
+      this.changeLayerVisibility(this.getLayers()[0], true);
+
       resolve();
     });
 
