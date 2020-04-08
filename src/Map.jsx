@@ -51,7 +51,6 @@ class Map {
   duration = 2000;
   customInteractions = [];
   customLayers = [];
-  onReset = null;
 
   create(params) {
     if (!params) {
@@ -81,14 +80,6 @@ class Map {
   };
 
   getBingKey = () => this.bingKey;
-
-  setResetHandler = handler => {
-    if (!handler) {
-      return;
-    }
-
-    this.onReset = handler;
-  };
 
   getDefaultBaseLayers = () => {
     let baseLayers = [];
@@ -121,48 +112,51 @@ class Map {
     return baseLayers;
   };
 
-  addInteraction = interaction => {
-    return new Promise(resolve => {
+  addInteraction = interaction =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !interaction) {
+        reject();
+      }
+
       this.customInteractions = [...this.customInteractions, interaction];
       this.map.addInteraction(interaction);
-      resolve();
+      resolve(this.customInteractions);
     });
-  };
 
-  removeInteraction = interaction => {
-    return new Promise((resolve, reject) => {
-      if (!interaction) {
+  removeInteraction = interaction =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !interaction) {
         reject();
       }
 
       this.customInteractions = this.customInteractions.filter(i => i.ol_uid !== interaction.ol_uid);
       this.map.removeInteraction(interaction);
-      resolve();
+      resolve(this.customInteractions);
     });
-  };
 
-  on = (evt, callback) => this.map.on(evt, callback);
-
-  removeLayer = layer => {
-    return new Promise((resolve, reject) => {
+  removeLayer = layer =>
+    new Promise((resolve, reject) => {
       if (!this.map) {
-        resolve();
+        reject();
       }
 
       this.customLayers = this.customLayers.filter(l => l.ol_uid !== layer.ol_uid);
       this.map.removeLayer(layer);
 
-      resolve();
+      resolve(this.getLayers());
     });
-  };
-  addLayer = layer => {
-    if (!this.map) {
-      return;
-    }
 
-    this.customLayers = [...this.customLayers, layer];
-    this.map.addLayer(layer);
-  };
+  addLayer = layer =>
+    new Promise((resolve, reject) => {
+      if (!this.map) {
+        reject();
+      }
+
+      this.customLayers = [...this.customLayers, layer];
+      this.map.addLayer(layer);
+
+      resolve(this.getLayers());
+    });
 
   /**
    * Parse GeoJSON feature
@@ -170,26 +164,31 @@ class Map {
    * @param f
    * @param customOptions
    */
-  parseGeoJSONFeature(f, customOptions) {
-    if (!f) {
-      return;
-    }
+  parseGeoJSONFeature = (f, customOptions) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !f) {
+        reject();
+      }
 
-    const format = new GeoJSON();
-    const feature = new Feature();
-    const geom = format.readGeometry(f.geom || f.geometry);
+      const format = new GeoJSON();
+      const feature = new Feature();
+      const geom = format.readGeometry(f.geom || f.geometry);
 
-    feature.setId(f.id);
-    feature.setGeometry(geom);
+      if (!geom) {
+        reject();
+      }
 
-    if (!isEmpty(customOptions)) {
-      Object.keys(customOptions).forEach(key => {
-        feature.set(key, customOptions[key]);
-      });
-    }
+      feature.setId(f.id);
+      feature.setGeometry(geom);
 
-    return feature;
-  }
+      if (!isEmpty(customOptions)) {
+        Object.keys(customOptions).forEach(key => {
+          feature.set(key, customOptions[key]);
+        });
+      }
+
+      resolve(feature);
+    });
 
   /**
    * Parse WKT feature
@@ -197,43 +196,49 @@ class Map {
    * @param f
    * @param customOptions
    */
-  parseFeature(f, customOptions) {
-    if (!f) {
-      return;
-    }
+  parseWKTFeature = (f, customOptions) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !f) {
+        reject();
+      }
 
-    const format = new WKT();
-    const feature = new Feature();
-    const geom = format.readGeometryFromText(f.geom || f.geometry);
+      const format = new WKT();
+      const feature = new Feature();
+      const geom = format.readGeometryFromText(f.geom || f.geometry);
 
-    feature.setId(f.id);
-    feature.setGeometry(geom);
+      if (!geom) {
+        reject();
+      }
 
-    if (!isEmpty(customOptions)) {
-      Object.keys(customOptions).forEach(key => feature.set(key, customOptions[key]));
-    }
+      feature.setId(f.id);
+      feature.setGeometry(geom);
 
-    return feature;
-  }
+      if (!isEmpty(customOptions)) {
+        Object.keys(customOptions).forEach(key => feature.set(key, customOptions[key]));
+      }
+
+      return resolve(feature);
+    });
 
   /**
    * Parse WKT features
    *
-   * @param data
+   * @param features
    */
-  parseFeatures = data => {
-    if (!data) {
-      return;
-    }
+  parseWKTFeatures = features =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !features) {
+        reject();
+      }
 
-    const features = new Collection();
+      const collection = new Collection();
 
-    data.forEach(f => {
-      features.push(this.parseFeature(f));
+      features.forEach(feature => {
+        collection.push(this.parseWKTFeature(feature));
+      });
+
+      resolve(collection);
     });
-
-    return features;
-  };
 
   /**
    * Add GeoJson feature in a layer
@@ -243,9 +248,9 @@ class Map {
    * @param customOptions
    * @returns {Promise<unknown>}
    */
-  addGeoJSONFeature = (layer, feature, customOptions) => {
-    return new Promise((resolve, reject) => {
-      if (!layer || !feature) {
+  addGeoJSONFeature = (layer, feature, customOptions) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !layer || !feature) {
         reject();
       }
 
@@ -255,12 +260,11 @@ class Map {
         reject();
       }
 
-      const parsedFeature = this.parseGeoJSONFeature(feature, customOptions);
-      source.addFeature(parsedFeature);
-
-      return resolve(source);
+      this.parseGeoJSONFeature(feature, customOptions).then(parsedFeature => {
+        source.addFeature(parsedFeature);
+        resolve(source);
+      });
     });
-  };
 
   /**
    * Add feature in a layer
@@ -270,9 +274,9 @@ class Map {
    * @param customOptions
    * @returns {Promise<unknown>}
    */
-  addFeature = (layer, feature, customOptions) => {
-    return new Promise((resolve, reject) => {
-      if (!layer || !feature) {
+  addWKTFeature = (layer, feature, customOptions) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !layer || !feature) {
         reject();
       }
 
@@ -282,16 +286,44 @@ class Map {
         reject();
       }
 
-      const parsedFeature = this.parseFeature(feature, customOptions);
-      source.addFeature(parsedFeature);
-
-      return resolve(source);
+      this.parseWKTFeature(feature, customOptions).then(parsedFeature => {
+        source.addFeature(parsedFeature);
+        resolve(source);
+      });
     });
-  };
 
-  removeFeatures = layer => {
-    return new Promise((resolve, reject) => {
-      if (!layer) {
+  /**
+   * Add features in a layer
+   *
+   * @param layer
+   * @param features
+   */
+  addWKTFeatures = (layer, features) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !layer || !features) {
+        reject();
+      }
+
+      const source = layer.getSource();
+
+      if (!source) {
+        reject();
+      }
+
+      this.parseWKTFeatures(features).then(parsedFeatures => {
+        source.addFeatures(parsedFeatures.getArray());
+        resolve(source);
+      });
+    });
+
+  /**
+   * Remove features from a lyer
+   *
+   * @param layer
+   */
+  removeFeatures = layer =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !layer) {
         reject();
       }
 
@@ -302,177 +334,118 @@ class Map {
       }
 
       source.clear();
-      return resolve(source);
+      resolve(source);
     });
-  };
-
-  /**
-   * Add features in a layer
-   *
-   * @param layer
-   * @param features
-   */
-  addFeatures = (layer, features) => {
-    return new Promise((resolve, reject) => {
-      if (!layer || !features) {
-        reject();
-      }
-
-      const source = layer.getSource();
-
-      if (!source) {
-        reject();
-      }
-
-      const parsedFeatures = this.parseFeatures(features);
-      source.addFeatures(parsedFeatures.getArray());
-
-      return resolve(source);
-    });
-  };
 
   /**
    *
    * @param sourceOptions
    * @param style
    */
-  createVectorLayer(sourceOptions, style) {
-    let options = {};
-
-    if (sourceOptions) {
-      options = { ...sourceOptions, ...sourceOptions };
-    }
-
-    return new VectorLayer({
-      source: new VectorSource({ ...options, crossOrigin: 'Anonymous' }),
-      style,
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    });
-  }
-
-  /**
-   *
-   * @param sourceOptions
-   */
-  createWMSLayer(sourceOptions) {
-    return new TileLayer({ source: new TileWMS({ ...sourceOptions, crossOrigin: 'Anonymous' }) });
-  }
-
-  /**
-   *
-   * @param sourceOptions
-   */
-  createTileLayer(sourceOptions) {
-    let options = {};
-
-    if (sourceOptions) {
-      options = { ...sourceOptions, ...options };
-    }
-
-    return new TileLayer({
-      source: new OSM({ ...options, crossOrigin: 'Anonymous' }),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    });
-  }
-
-  createLayers = (layers, id_parent) => {
-    if (isEmpty(layers)) {
-      return;
-    }
-
-    layers.forEach(layer => {
-      const type = layer.type || LAYER_TYPE.VECTOR;
-      const upperType = type.toUpperCase();
+  createVectorLayer = (sourceOptions, style) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !sourceOptions) {
+        reject();
+      }
 
       let options = {};
 
-      switch (type.toLowerCase()) {
-        case LAYER_TYPE.WMS: {
-          let params = { LAYERS: layer.name, TILED: true };
-
-          if (layer.cqlFilter) {
-            const cqlFilterReplaced = layer.cqlFilter.replace('%1%', layer.cqlValue);
-            params = { ...params, cql_filter: cqlFilterReplaced };
-          }
-
-          options = { ...options, url: layer.url, params };
-          break;
-        }
-        default:
-          break;
+      if (sourceOptions) {
+        options = { ...sourceOptions, ...options };
       }
 
-      const layertoGenerate = this.createLayer(upperType, options, {
-        ...layer,
-        type: type.toLowerCase(),
-        isRoot: !id_parent,
-        idParent: id_parent
+      const layer = new VectorLayer({
+        source: new VectorSource({ ...options, crossOrigin: 'Anonymous' }),
+        style,
+        updateWhileAnimating: true,
+        updateWhileInteracting: true
       });
 
-      layertoGenerate.setVisible(layer.visible);
-      this.addLayer(layertoGenerate);
-
-      if (layer.group) {
-        this.createLayers(layer.layers, layertoGenerate.ol_uid);
+      if (!layer) {
+        reject();
       }
+
+      resolve(layer);
     });
-  };
 
-  createLayer = (type, sourceOptions, customOptions, style) => {
-    if (!type) {
-      return false;
-    }
-
-    let newLayer;
-
-    switch (type.toLowerCase()) {
-      case LAYER_TYPE.WMS:
-        newLayer = this.createWMSLayer(sourceOptions);
-        break;
-      case LAYER_TYPE.VECTOR:
-        newLayer = this.createVectorLayer(sourceOptions, style);
-        break;
-      default:
-        newLayer = this.createTileLayer(sourceOptions);
-        break;
-    }
-
-    customOptions &&
-      Object.keys(customOptions).forEach(key => {
-        newLayer.set(key, customOptions[key]);
-      });
-
-    return newLayer;
-  };
-
-  createAsyncLayer = (type, sourceOptions, customOptions, style) =>
+  /**
+   *
+   * @param sourceOptions
+   */
+  createWMSLayer = sourceOptions =>
     new Promise((resolve, reject) => {
-      if (!type) {
-        return reject();
+      if (!this.map || !sourceOptions) {
+        reject();
       }
 
-      let newLayer;
+      const layer = new TileLayer({ source: new TileWMS({ ...sourceOptions, crossOrigin: 'Anonymous' }) });
+
+      if (!layer) {
+        reject();
+      }
+
+      resolve(layer);
+    });
+
+  /**
+   *
+   * @param sourceOptions
+   */
+  createTileLayer = sourceOptions =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !sourceOptions) {
+        reject();
+      }
+
+      let options = {};
+
+      if (sourceOptions) {
+        options = { ...sourceOptions, ...options };
+      }
+
+      const layer = new TileLayer({
+        source: new OSM({ ...options, crossOrigin: 'Anonymous' }),
+        updateWhileAnimating: true,
+        updateWhileInteracting: true
+      });
+
+      if (!layer) {
+        reject();
+      }
+
+      resolve(layer);
+    });
+
+  createLayer = (type, sourceOptions, customOptions, style) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !type) {
+        reject();
+      }
+
+      let funcToCall;
 
       switch (type.toLowerCase()) {
         case LAYER_TYPE.WMS:
-          newLayer = this.createWMSLayer(sourceOptions);
+          funcToCall = this.createWMSLayer;
           break;
         case LAYER_TYPE.VECTOR:
-          newLayer = this.createVectorLayer(sourceOptions, style);
+          funcToCall = this.createVectorLayer;
           break;
         default:
-          newLayer = this.createTileLayer(sourceOptions);
+          funcToCall = this.createTileLayer;
           break;
       }
 
-      customOptions &&
-        Object.keys(customOptions).forEach(key => {
-          newLayer.set(key, customOptions[key]);
-        });
+      funcToCall(sourceOptions, style)
+        .then(newLayer => {
+          customOptions &&
+            Object.keys(customOptions).forEach(key => {
+              newLayer.set(key, customOptions[key]);
+            });
 
-      return resolve(newLayer);
+          resolve(newLayer);
+        })
+        .catch(() => reject());
     });
 
   /**
@@ -598,10 +571,21 @@ class Map {
   /**
    * Capture image map
    */
-  capture = () => {
-    toPng(this.map.getTargetElement(), {
-      filter: element => (element.className ? element.className.indexOf('ol-control') === -1 : true)
-    }).then(dataURL => {
+  capture = full => {
+    if (!this.map) {
+      return;
+    }
+
+    let options = {};
+
+    if (!full) {
+      options = {
+        ...options,
+        filter: element => (element.className ? element.className.indexOf('ol-control') === -1 : true)
+      };
+    }
+
+    toPng(this.map.getTargetElement(), options).then(dataURL => {
       const a = document.createElement('a');
       a.href = dataURL;
       a.download = `map.png`;
@@ -679,15 +663,16 @@ class Map {
    * @param layer
    * @param isVisible
    */
-  changeLayerVisibility = (layer, isVisible) => {
-    return new Promise((resolve, reject) => {
-      const layers = this.getLayers();
-
-      if (!layer) {
-        return reject();
+  changeLayerVisibility = (layer, isVisible) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !layer) {
+        reject();
       }
 
-      if (layer.get('mutuallyExclusive')) {
+      const layers = this.getLayers();
+      const isMutuallyExclusive = layer.get('mutuallyExclusive');
+
+      if (isMutuallyExclusive) {
         // Logic only on mutually exclusive layers
         const mutuallyExclusiveLayers = layers.filter(layer => layer.get('mutuallyExclusive'));
         mutuallyExclusiveLayers.forEach(l => {
@@ -700,13 +685,16 @@ class Map {
         resolve();
       }
     });
-  };
 
   /**
    * Reset layers
    */
   resetLayers = () =>
     new Promise((resolve, reject) => {
+      if (!this.map) {
+        reject();
+      }
+
       const layers = this.getLayers();
 
       if (!layers) {
@@ -715,28 +703,27 @@ class Map {
 
       this.map.setLayerGroup(new Group());
 
-      /**
-       * Add default layers
-       */
-      const newBaseLayers = this.getDefaultBaseLayers();
-      newBaseLayers.forEach(layer => {
-        this.addLayer(layer);
-      });
-
-      if (this.onReset) {
-        this.onReset();
-      }
-
       this.customLayers = [];
-      resolve();
+      resolve(this.getLayers());
     });
 
   resetCustomLayers = () =>
-    new Promise(resolve => {
-      this.customLayers.forEach(l => this.removeLayer(l));
-      this.changeLayerVisibility(this.getLayers()[0], true);
+    new Promise((resolve, reject) => {
+      if (!this.map) {
+        reject();
+      }
 
-      resolve();
+      Promise.all(this.customLayers.map(l => this.removeLayer(l)))
+        .then(() => {
+          const firstLayer = this.getLayers()[0];
+
+          if (firstLayer) {
+            this.changeLayerVisibility(firstLayer, true);
+          }
+
+          resolve();
+        })
+        .catch(() => reject());
     });
 
   /**
@@ -744,35 +731,48 @@ class Map {
    */
   resetInteractions = () =>
     new Promise((resolve, reject) => {
+      if (!this.map) {
+        reject();
+      }
+
       const interactions = this.getInteractions();
 
       if (!interactions) {
         reject();
       }
 
-      interactions.forEach(i => this.removeInteraction(i));
-      resolve();
+      Promise.all(interactions.map(i => this.removeInteraction(i)))
+        .then(() => resolve())
+        .catch(() => reject());
     });
 
   /**
    * Reset custom interactions
    */
   resetCustomInteractions = () =>
-    new Promise(resolve => {
-      this.customInteractions.forEach(i => this.removeInteraction(i));
-      resolve();
+    new Promise((resolve, reject) => {
+      if (!this.map) {
+        reject();
+      }
+
+      if (isEmpty(this.customInteractions)) {
+        resolve();
+      }
+
+      Promise.all(this.customInteractions.map(i => this.removeInteraction(i)))
+        .then(() => resolve())
+        .catch(() => reject());
     });
 
-  changeOpacity = (layer, value) => {
-    return new Promise((resolve, reject) => {
-      if (!layer) {
+  changeOpacity = (layer, value) =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !layer) {
         reject();
       }
 
       layer.setOpacity(value);
       resolve();
     });
-  };
 }
 
 export default Map;
