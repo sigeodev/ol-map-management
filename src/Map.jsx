@@ -160,6 +160,7 @@ class Map {
       return;
     }
 
+    this.customLayers = [...this.customLayers, layer];
     this.map.addLayer(layer);
   };
 
@@ -443,8 +444,6 @@ class Map {
         newLayer.set(key, customOptions[key]);
       });
 
-    this.customLayers = [...this.customLayers, newLayer];
-
     return newLayer;
   };
 
@@ -715,7 +714,6 @@ class Map {
       }
 
       this.map.setLayerGroup(new Group());
-      this.customLayers = [];
 
       /**
        * Add default layers
@@ -729,6 +727,7 @@ class Map {
         this.onReset();
       }
 
+      this.customLayers = [];
       resolve();
     });
 
