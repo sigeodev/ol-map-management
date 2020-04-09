@@ -344,7 +344,7 @@ class Map {
    */
   createVectorLayer = (sourceOptions, style) =>
     new Promise((resolve, reject) => {
-      if (!this.map || !sourceOptions) {
+      if (!this.map) {
         reject();
       }
 
@@ -393,7 +393,7 @@ class Map {
    */
   createTileLayer = sourceOptions =>
     new Promise((resolve, reject) => {
-      if (!this.map || !sourceOptions) {
+      if (!this.map) {
         reject();
       }
 
