@@ -240,7 +240,7 @@ class Map {
         reject();
       }
 
-      this.drawing.setActive(false);
+      this.drawing.interaction.setActive(false);
       this.selection.setActive(true);
 
       resolve(this.drawing);
@@ -252,7 +252,7 @@ class Map {
         reject();
       }
 
-      this.drawing.setActive(true);
+      this.drawing.interaction.setActive(true);
       this.selection.setActive(false);
 
       resolve(this.drawing);
