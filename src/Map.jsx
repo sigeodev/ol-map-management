@@ -52,18 +52,64 @@ class Map {
   customInteractions = [];
   customLayers = [];
 
-  create(params) {
-    if (!params) {
-      return;
-    }
+  editing = null;
+  selection = null;
 
-    this.map = new OlMap({
-      ...params,
-      layers: params.layers || this.getDefaultBaseLayers()
+  drawing = {
+    layer: null,
+    interaction: null
+  };
+
+  create = params =>
+    new Promise((resolve, reject) => {
+      if (!params) {
+        reject();
+      }
+
+      const { layers, ...rest } = params;
+
+      this.map = new OlMap({
+        ...rest,
+        layers: layers || this.getDefaultBaseLayers()
+      });
+
+      this.createLayer(LAYER_TYPE.VECTOR, null, {
+        mutuallyExclusive: false,
+        type: LAYER_TYPE.VECTOR
+      })
+        .then(drawingLayer => {
+          drawingLayer.setZIndex(300);
+
+          const drawing = {
+            layer: drawingLayer,
+            interaction: new Draw({
+              source: drawingLayer.getSource(),
+              type: GeometryType.POLYGON
+            })
+          };
+
+          const selection = new Select();
+          const editing = new Modify({
+            features: selection.interaction.getFeatures()
+          });
+
+          drawing.interaction.setActive(false);
+          editing.setActive(false);
+          selection.setActive(true);
+
+          this.addLayer(drawing.layer);
+          this.addInteraction(drawing.interaction);
+          this.addInteraction(editing);
+          this.addInteraction(selection);
+
+          this.editing = editing;
+          this.selection = selection;
+          this.drawing = drawing;
+
+          resolve(this.map);
+        })
+        .catch(() => reject());
     });
-
-    return this.map;
-  }
 
   getMap = () => this.map;
   getView = () => this.map.getView();
@@ -84,9 +130,7 @@ class Map {
   getDefaultBaseLayers = () => {
     let baseLayers = [];
 
-    /**
-     * Create invisible base layers
-     */
+    // Create invisible base layers
     BASE_LAYERS.forEach((baseLayer, i) => {
       baseLayers = [
         ...baseLayers,
@@ -105,12 +149,104 @@ class Map {
       baseLayers[i].set('label', baseLayer.label);
     });
 
-    /**
-     * Enable (set to visible) first base layer!
-     */
+    // Enable (set to visible) first base layer!
     baseLayers[0].setVisible(true);
     return baseLayers;
   };
+
+  reset = () => Promise.all([this.resetCustomLayers(), this.resetCustomInteractions()]);
+
+  pushSelectedFeature = feature =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.selection || !feature) {
+        reject();
+      }
+
+      this.selection.getFeatures().push(feature);
+      this.selection.dispatchEvent('select');
+
+      resolve(this.selection);
+    });
+
+  cleanSelection = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.selection) {
+        reject();
+      }
+
+      this.selection.getFeatures().clear();
+      this.selection.dispatchEvent('change');
+
+      resolve(this.selection);
+    });
+
+  enableSelection = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.selection) {
+        reject();
+      }
+
+      this.selection.setActive(true);
+      resolve(this.selection);
+    });
+
+  disableSelection = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.selection) {
+        reject();
+      }
+
+      this.selection.setActive(false);
+      resolve(this.selection);
+    });
+
+  disableEditing = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.editing || !this.selection) {
+        reject();
+      }
+
+      this.editing.setActive(false);
+      this.selection.setActive(true);
+
+      resolve(this.editing);
+    });
+
+  enableEditing = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.editing || !this.selection) {
+        reject();
+      }
+
+      this.editing.setActive(true);
+      this.selection.setActive(false);
+
+      resolve(this.editing);
+    });
+
+  disableDrawing = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.drawing || !this.selection) {
+        reject();
+      }
+
+      this.drawing.setActive(false);
+      this.selection.setActive(true);
+
+      resolve(this.drawing);
+    });
+
+  enableDrawing = () =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.drawing || !this.selection) {
+        reject();
+      }
+
+      this.drawing.setActive(true);
+      this.selection.setActive(false);
+
+      resolve(this.drawing);
+    });
 
   addInteraction = interaction =>
     new Promise((resolve, reject) => {
@@ -374,11 +510,17 @@ class Map {
    */
   createWMSLayer = sourceOptions =>
     new Promise((resolve, reject) => {
-      if (!this.map || !sourceOptions) {
+      if (!this.map) {
         reject();
       }
 
-      const layer = new TileLayer({ source: new TileWMS({ ...sourceOptions, crossOrigin: 'Anonymous' }) });
+      let options = {};
+
+      if (sourceOptions) {
+        options = { ...sourceOptions, ...options };
+      }
+
+      const layer = new TileLayer({ source: new TileWMS({ ...sourceOptions, crossOrigin: 'Anonymous' }), preload: Infinity });
 
       if (!layer) {
         reject();
@@ -405,6 +547,7 @@ class Map {
 
       const layer = new TileLayer({
         source: new OSM({ ...options, crossOrigin: 'Anonymous' }),
+        preload: Infinity,
         updateWhileAnimating: true,
         updateWhileInteracting: true
       });
