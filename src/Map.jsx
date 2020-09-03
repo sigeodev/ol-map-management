@@ -60,8 +60,8 @@ class Map {
     interaction: null
   };
 
-  create = params =>
-    new Promise((resolve, reject) => {
+  create(params) {
+    return new Promise((resolve, reject) => {
       if (!params) {
         reject();
       }
@@ -78,8 +78,6 @@ class Map {
         type: LAYER_TYPE.VECTOR
       })
         .then(drawingLayer => {
-          drawingLayer.setZIndex(300);
-
           const drawing = {
             layer: drawingLayer,
             interaction: new Draw({
@@ -93,6 +91,7 @@ class Map {
             features: selection.interaction.getFeatures()
           });
 
+          drawingLayer.setZIndex(300);
           drawing.interaction.setActive(false);
           editing.setActive(false);
           selection.setActive(true);
@@ -108,8 +107,9 @@ class Map {
 
           resolve(this.map);
         })
-        .catch(() => reject());
+        .catch(e => reject(e));
     });
+  }
 
   getMap = () => this.map;
   getView = () => this.map.getView();

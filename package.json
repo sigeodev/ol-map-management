@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "/bin/rm -rf lib/*; ./node_modules/.bin/babel src -d lib",
-    "prettier": "prettier --single-quote --jsx-single-quote --write '**/*.js*'"
+    "prettier": "prettier --single-quote --jsx-single-quote --write 'src/*.js*'"
   },
   "repository": {
     "type": "git",
