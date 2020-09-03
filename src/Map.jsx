@@ -94,7 +94,7 @@ class Map {
 
           const selection = new Select();
           const editing = new Modify({
-            features: selection.interaction.getFeatures()
+            features: selection.getFeatures()
           });
 
           drawingLayer.setZIndex(300);
