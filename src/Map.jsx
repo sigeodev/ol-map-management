@@ -121,6 +121,10 @@ class Map {
   getView = () => this.map.getView();
   getSize = () => this.map.getSize();
 
+  getSelection = () => this.selection;
+  getEditing = () => this.editing;
+  getDrawing = () => this.drawing;
+
   setDuration = duration => {
     this.duration = duration;
   };
