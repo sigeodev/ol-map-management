@@ -15,6 +15,12 @@ import Group from 'ol/layer/Group';
 import OSM from 'ol/source/OSM';
 import { transform } from 'ol/proj';
 import GeoJSON from 'ol/format/GeoJSON';
+
+import Select from 'ol/interaction/Select';
+import Modify from 'ol/interaction/Modify';
+import Draw from 'ol/interaction/Draw';
+import GeometryType from 'ol/geom/GeometryType';
+
 import TerrainIcon from '@material-ui/icons/Terrain';
 import FlightIcon from '@material-ui/icons/Flight';
 import DarkIcon from '@material-ui/icons/Brightness4';
