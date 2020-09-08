@@ -246,7 +246,7 @@ class Map {
       resolve(this.drawing);
     });
 
-  changeDrawing = options =>
+  changeDrawingInteraction = options =>
     new Promise((resolve, reject) => {
       if (!this.map || !this.drawing || isEmpty(options)) {
         reject();
