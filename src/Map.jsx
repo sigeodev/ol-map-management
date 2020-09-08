@@ -246,10 +246,23 @@ class Map {
       resolve(this.drawing);
     });
 
-  enableDrawing = () =>
+  enableDrawing = options =>
     new Promise((resolve, reject) => {
       if (!this.map || !this.drawing || !this.selection) {
         reject();
+      }
+
+      if (!isEmpty(options)) {
+        this.removeInteraction(this.drawing.interaction);
+
+        const newDrawingInteraction = new Draw({
+          source,
+          type: GeometryType.POLYGON,
+          ...options
+        });
+
+        this.addInteraction(newDrawingInteraction);
+        this.drawing = { ...this.drawing, interaction: newDrawingInteraction };
       }
 
       this.drawing.interaction.setActive(true);
