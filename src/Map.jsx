@@ -252,6 +252,7 @@ class Map {
         reject();
       }
 
+      const source = this.drawing.layer.getSource();
       const currentActiveState = this.drawing.interaction.getActive();
       this.removeInteraction(this.drawing.interaction);
 
