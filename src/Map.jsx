@@ -102,10 +102,10 @@ class Map {
           editing.setActive(false);
           selection.setActive(true);
 
-          this.addLayer(drawing.layer);
-          this.addInteraction(drawing.interaction);
-          this.addInteraction(editing);
-          this.addInteraction(selection);
+          this.map.addLayer(drawing.layer);
+          this.map.addInteraction(drawing.interaction);
+          this.map.addInteraction(editing);
+          this.map.addInteraction(selection);
 
           this.editing = editing;
           this.selection = selection;
