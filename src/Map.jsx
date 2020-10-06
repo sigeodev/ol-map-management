@@ -117,6 +117,27 @@ class Map {
     });
   }
 
+  changeEditingInteraction = options =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.editing || isEmpty(options)) {
+        reject();
+      }
+
+      const currentActiveState = this.editing.getActive();
+      this.removeInteraction(this.editing);
+
+      const newEditingInteraction = new Modify({
+        features: this.selection.getFeatures(),
+        ...options
+      });
+
+      newEditingInteraction.setActive(currentActiveState);
+      this.addInteraction(newEditingInteraction);
+      this.editing = newEditingInteraction;
+
+      resolve(this.editing);
+    });
+
   getMap = () => this.map;
   getView = () => this.map.getView();
   getSize = () => this.map.getSize();
