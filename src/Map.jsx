@@ -117,27 +117,6 @@ class Map {
     });
   }
 
-  changeEditingInteraction = options =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !this.editing || isEmpty(options)) {
-        reject();
-      }
-
-      const currentActiveState = this.editing.getActive();
-      this.removeInteraction(this.editing);
-
-      const newEditingInteraction = new Modify({
-        features: this.selection.getFeatures(),
-        ...options
-      });
-
-      newEditingInteraction.setActive(currentActiveState);
-      this.addInteraction(newEditingInteraction);
-      this.editing = newEditingInteraction;
-
-      resolve(this.editing);
-    });
-
   getMap = () => this.map;
   getView = () => this.map.getView();
   getSize = () => this.map.getSize();
@@ -265,6 +244,45 @@ class Map {
       this.selection.setActive(true);
 
       resolve(this.drawing);
+    });
+
+  changeSelectionInteraction = options =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.selection || isEmpty(options)) {
+        reject();
+      }
+
+      const currentActiveState = this.selection.getActive();
+      this.removeInteraction(this.selection);
+
+      const newInteraction = new Select(options);
+
+      newInteraction.setActive(currentActiveState);
+      this.addInteraction(newInteraction);
+      this.selection = newInteraction;
+
+      resolve(this.selection);
+    });
+
+  changeEditingInteraction = options =>
+    new Promise((resolve, reject) => {
+      if (!this.map || !this.editing || isEmpty(options)) {
+        reject();
+      }
+
+      const currentActiveState = this.editing.getActive();
+      this.removeInteraction(this.editing);
+
+      const newEditingInteraction = new Modify({
+        features: this.selection.getFeatures(),
+        ...options
+      });
+
+      newEditingInteraction.setActive(currentActiveState);
+      this.addInteraction(newEditingInteraction);
+      this.editing = newEditingInteraction;
+
+      resolve(this.editing);
     });
 
   changeDrawingInteraction = options =>
