@@ -367,138 +367,93 @@ class Map {
     });
 
   /**
+   * Add GeoJson item in a layer
+   *
+   * @param layer
+   * @param item
+   */
+  addGeoJSONItem = (layer, item) => {
+    if (!this.map || !layer || !item) {
+      return undefined;
+    }
+
+    const source = layer.getSource();
+    const feature = this.createGeoJSONFeature(item);
+
+    return source.addFeature(feature);
+  };
+
+  /**
+   * Add GeoJson items in a layer
+   *
+   * @param layer
+   * @param items
+   */
+  addGeoJSONItems = (layer, items) => {
+    if (!this.map || !layer || !items) {
+      return undefined;
+    }
+
+    const source = layer.getSource();
+    const features = items.map(i => this.createGeoJSONFeature(i));
+
+    return source.addFeatures(features);
+  };
+
+  /**
    * Parse GeoJSON feature
    *
    * @param f
    * @param customOptions
    */
-  parseGeoJSONFeature = (f, customOptions) =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !f) {
-        reject();
-      }
+  createGeoJSONFeature = item => {
+    if (!this.map || !item) {
+      return undefined;
+    }
 
-      const format = new GeoJSON();
-      const feature = new Feature();
-      const geom = format.readGeometry(f.geom || f.geometry);
+    const format = new GeoJSON();
 
-      if (!geom) {
-        reject();
-      }
-
-      feature.setId(f.id);
-      feature.setGeometry(geom);
-
-      if (!isEmpty(customOptions)) {
-        Object.keys(customOptions).forEach(key => {
-          feature.set(key, customOptions[key]);
-        });
-      }
-
-      resolve(feature);
+    return new Feature({
+      ...item,
+      geometry: format.readGeometry(item.geom || item.geometry)
     });
+  };
 
   /**
-   * Parse WKT feature
+   * Create WKT feature
    *
    * @param f
    * @param customOptions
    */
-  parseWKTFeature = (f, customOptions) =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !f) {
-        reject();
-      }
+  createWKTFeature = item => {
+    if (!this.map || !item) {
+      return undefined;
+    }
 
-      const format = new WKT();
-      const feature = new Feature();
-      const geom = format.readGeometryFromText(f.geom || f.geometry);
+    const format = new WKT();
 
-      if (!geom) {
-        reject();
-      }
-
-      feature.setId(f.id);
-      feature.setGeometry(geom);
-
-      if (!isEmpty(customOptions)) {
-        Object.keys(customOptions).forEach(key => feature.set(key, customOptions[key]));
-      }
-
-      return resolve(feature);
+    return new Feature({
+      ...item,
+      geometry: format.readGeometryFromText(item.geom || item.geometry)
     });
+  };
 
   /**
-   * Parse WKT features
-   *
-   * @param features
-   */
-  parseWKTFeatures = features =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !features) {
-        reject();
-      }
-
-      const collection = new Collection();
-
-      features.forEach(feature => {
-        collection.push(this.parseWKTFeature(feature));
-      });
-
-      resolve(collection);
-    });
-
-  /**
-   * Add GeoJson feature in a layer
+   * Add WKT item in a layer
    *
    * @param layer
-   * @param feature
-   * @param customOptions
-   * @returns {Promise<unknown>}
+   * @param item
    */
-  addGeoJSONFeature = (layer, feature, customOptions) =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !layer || !feature) {
-        reject();
-      }
+  addWKTItem = (layer, item) => {
+    if (!this.map || !layer || !item) {
+      return undefined;
+    }
 
-      const source = layer.getSource();
+    const source = layer.getSource();
+    const feature = this.createWKTFeature(item);
 
-      if (!source) {
-        reject();
-      }
-
-      this.parseGeoJSONFeature(feature, customOptions).then(parsedFeature => {
-        source.addFeature(parsedFeature);
-        resolve(source);
-      });
-    });
-
-  /**
-   * Add feature in a layer
-   *
-   * @param layer
-   * @param feature
-   * @param customOptions
-   * @returns {Promise<unknown>}
-   */
-  addWKTFeature = (layer, feature, customOptions) =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !layer || !feature) {
-        reject();
-      }
-
-      const source = layer.getSource();
-
-      if (!source) {
-        reject();
-      }
-
-      this.parseWKTFeature(feature, customOptions).then(parsedFeature => {
-        source.addFeature(parsedFeature);
-        resolve(source);
-      });
-    });
+    return source.addFeature(feature);
+  };
 
   /**
    * Add features in a layer
@@ -506,23 +461,16 @@ class Map {
    * @param layer
    * @param features
    */
-  addWKTFeatures = (layer, features) =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !layer || !features) {
-        reject();
-      }
+  addWKTItems = (layer, items) => {
+    if (!this.map || !layer || !items) {
+      reject();
+    }
 
-      const source = layer.getSource();
+    const source = layer.getSource();
 
-      if (!source) {
-        reject();
-      }
-
-      this.parseWKTFeatures(features).then(parsedFeatures => {
-        source.addFeatures(parsedFeatures.getArray());
-        resolve(source);
-      });
-    });
+    const features = items.map(i => this.createWKTFeature(i));
+    return source.addFeatures(features);
+  };
 
   /**
    * Remove features from a lyer
