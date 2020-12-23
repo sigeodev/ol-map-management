@@ -5,7 +5,6 @@ import isEmpty from 'lodash/isEmpty';
 import OlMap from 'ol/Map';
 import WKT from 'ol/format/WKT';
 import Feature from 'ol/Feature';
-import Collection from 'ol/Collection';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import TileLayer from 'ol/layer/Tile';
@@ -165,30 +164,6 @@ class Map {
   };
 
   reset = () => Promise.all([this.resetCustomLayers(), this.resetCustomInteractions()]);
-
-  pushSelectedFeature = feature =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !this.selection || !feature) {
-        reject();
-      }
-
-      this.selection.getFeatures().push(feature);
-      this.selection.dispatchEvent('select');
-
-      resolve(this.selection);
-    });
-
-  cleanSelection = () =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !this.selection) {
-        reject();
-      }
-
-      this.selection.getFeatures().clear();
-      this.selection.dispatchEvent('change');
-
-      resolve(this.selection);
-    });
 
   enableSelection = () =>
     new Promise((resolve, reject) => {
@@ -756,54 +731,6 @@ class Map {
     });
   };
 
-  /**
-  getFeatureInfo = coordinate => {
-    return new Promise((resolve, reject) => {
-      if (!coordinate) {
-        reject();
-      }
-
-      const layerToInteraction = this.getLayerToInteraction();
-      const view = this.getView();
-      const type = layerToInteraction.values_.type;
-      const source = layerToInteraction.getSource();
-
-      if (!type || !source) {
-        reject();
-      }
-
-      switch (type) {
-        case LAYER_TYPE.VECTOR: {
-          const data = source.getFeaturesAtCoordinate(coordinate);
-          return resolve(data);
-        }
-        case LAYER_TYPE.WMS: {
-          const viewResolution = view.getResolution();
-          const viewProjection = view.getProjection();
-          const url = source.getGetFeatureInfoUrl(coordinate, viewResolution, viewProjection.getCode(), { INFO_FORMAT: 'application/json' });
-
-          if (!url) {
-            return;
-          }
-
-          fetch(url).then(res => {
-            const data = res;
-
-            if (data) {
-              return data.json().then(dataJson => resolve(dataJson));
-            }
-
-            return reject();
-          });
-          break;
-        }
-        default:
-          return reject();
-      }
-    });
-  };
- */
-
   getLayers = () => {
     if (!this.map) {
       return [];
@@ -925,16 +852,6 @@ class Map {
       Promise.all(this.customInteractions.map(i => this.removeInteraction(i)))
         .then(() => resolve())
         .catch(() => reject());
-    });
-
-  changeOpacity = (layer, value) =>
-    new Promise((resolve, reject) => {
-      if (!this.map || !layer) {
-        reject();
-      }
-
-      layer.setOpacity(value);
-      resolve();
     });
 }
 
